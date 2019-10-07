@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+  .chessboard {
+  width: 480px;
+  height: 480px;
+  margin: 1px;
+  border: 2px solid #f44336;
+}
+
+.black,
+.white {
+  float: left;
+  width: 60px;
+  height: 60px;
+  font-size: 50px;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.black {
+  background-color: black;
+}
+
+.white {
+  background-color: white;
+}</style>
+</head>
+<body>
+    <div class="chessboard">
+        <!-- 1st -->
+        <div class="white" data-row="1" data-column="1">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="1" data-column="3">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="1" data-column="5">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="1" data-column="7">&#9817;</div>
+        <div class="black"></div>
+
+        <!-- 2nd -->
+        <div class="black"></div>
+        <div class="white" data-row="2" data-column="2">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="2" data-column="4">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="2" data-column="6">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="2" data-column="8">&#9817;</div>
+
+        <!-- 3rd -->
+        <div class="white" data-row="3" data-column="1">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="3" data-column="3">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="3" data-column="5">&#9817;</div>
+        <div class="black"></div>
+        <div class="white" data-row="3" data-column="7">&#9817;</div>
+        <div class="black"></div>
+
+        <!-- 4th -->
+        <div class="black"></div>
+        <div class="white" data-row="4" data-column="2"></div>
+        <div class="black"></div>
+        <div class="white" data-row="4" data-column="4"></div>
+        <div class="black"></div>
+        <div class="white" data-row="4" data-column="6"></div>
+        <div class="black"></div>
+        <div class="white" data-row="4" data-column="8"></div>
+
+        <!-- 5th -->
+        <div class="white" data-row="5" data-column="1"></div>
+        <div class="black"></div>
+        <div class="white" data-row="5" data-column="3"></div>
+        <div class="black"></div>
+        <div class="white" data-row="5" data-column="5"></div>
+        <div class="black"></div>
+        <div class="white" data-row="5" data-column="7"></div>
+        <div class="black"></div>
+
+        <!-- 6th -->
+        <div class="black"></div>
+        <div class="white" data-row="6" data-column="2">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="6" data-column="4">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="6" data-column="6">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="6" data-column="8">&#9823;</div>
+
+        <!-- 7th -->
+        <div class="white" data-row="7" data-column="1">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="7" data-column="3">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="7" data-column="5">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="7" data-column="7">&#9823;</div>
+        <div class="black"></div>
+
+        <!-- 8th -->
+        <div class="black"></div>
+        <div class="white" data-row="8" data-column="2">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="8" data-column="4">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="8" data-column="6">&#9823;</div>
+        <div class="black"></div>
+        <div class="white" data-row="8" data-column="8">&#9823;</div>
+    </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let board = document.getElementsByClassName("chessboard")[0]
+    let pieceCode = '\u2659'
+    let whitePieceCode = '\u265f'
+    let from
+    let target
+    let currentTarget = ''
+
+    const socket = io()
+
+    socket.on('player-number',function(index){
+      console.log(123)
+      alert(`You are ${index}`)
+    })
+
+    const getElement = (row, column) => {
+      return board.querySelector(`[data-row='${row}'][data-column='${column}']`)
+    }
+
+    Array.from(board.children).forEach(function(cell) {
+      cell.onclick = (elem) => { 
+        const targetRow = elem.target.dataset.row;
+        const targetColumn = elem.target.dataset.column;
+        const item = elem.target.innerHTML
+        socket.emit('move', {targetRow, targetColumn, item})
+      }
+    });
+
+    socket.on('move',function(obj) {
+      let {item, targetColumn, targetRow } = obj;
+      target = getElement(targetRow, targetColumn)
+      if (item === pieceCode || item === whitePieceCode) {
+            currentTarget = target
+        } else if (currentTarget && isLegalMove(currentTarget, target)) {
+            target.innerHTML = currentTarget.innerHTML;
+            currentTarget.innerHTML = '';
+            from = null;
+        }
+    })
+
+    function isLegalMove(from, to) {
+      let result = Math.abs(from.dataset.row - to.dataset.row);
+
+      if( result === 1) {
+        result = result && Math.abs(from.dataset.column - to.dataset.column) < 2
+        result = result && to.innerHTML !== pieceCode
+        result = result && to.className.indexOf('white') > -1;
+        return result;
+      } else if(result === 2) {
+        const rowFrom = +from.dataset.row;
+        const columnFrom = +from.dataset.column;
+        const rowTo = +to.dataset.row;
+        const columnTo = +to.dataset.column;
+        const enemyColumn = (columnFrom+columnTo)/2
+        const enemyRow = (rowFrom + rowTo)/2
+        const enemy = getElement(enemyRow, enemyColumn)
+        result = result && Math.abs(from.dataset.column - to.dataset.column) < 3
+        result = result && to.innerHTML !== pieceCode
+        result = result && to.className.indexOf('white') > -1;
+        result = result && enemy.innerHTML != ''
+        result = result && from.innerHTML != enemy.innerHTML;
+          if(result) {
+            enemy.innerHTML = ''
+            return 1;
+          }
+      }
+
+    }
+  </script>
+</body>
+</html>
